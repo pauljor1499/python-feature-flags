@@ -13,7 +13,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Question Bank API",
-    description="Owned by: MathMattersTx Team",
+    description="Owned by: EruditionTx Team",
     version="Version 1.0",
     lifespan=lifespan
 )

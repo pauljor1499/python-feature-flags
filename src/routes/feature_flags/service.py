@@ -36,19 +36,17 @@ class FeatureFlags:
         inserted_features = []
 
         try:
-            # Retrieve the school ID from the payload and convert it to ObjectId
             school_id = ObjectId(school["school"]["_id"])
             
-            # Loop through all features defined in all_features
             for feature_name in all_features:
                 # Check if the feature is in the active_features list
                 active_feature = next((feature for feature in school["school"]["active_features"] if feature["name"] == feature_name), None)
-                is_enabled = active_feature["enabled"] if active_feature else False  # Default to False if not found
+                is_enabled = active_feature["enabled"] if active_feature else False
 
                 feature_data = {
                     "name": feature_name,
                     "enabled": is_enabled,
-                    "school": str(school_id)  # Store the school ID as a string for MongoDB
+                    "school": school_id
                 }
 
                 # Check if the feature already exists for this school
@@ -59,8 +57,8 @@ class FeatureFlags:
                 if not existing_feature:
                     # Insert the new feature into the collection
                     insert_result = await self.collection.insert_one(feature_data)
-                    feature_data["_id"] = str(insert_result.inserted_id)  # Convert ObjectId to string
-                    inserted_features.append(feature_data)  # Add the created feature to the list
+                    feature_data["_id"] = insert_result.inserted_id  # Keep ObjectId for storage
+                    inserted_features.append(feature_serializer(feature_data))
                 else:
                     # Update the existing feature if the enabled status has changed
                     if existing_feature['enabled'] != is_enabled:
@@ -68,8 +66,7 @@ class FeatureFlags:
                             {"_id": existing_feature["_id"]},
                             {"$set": {"enabled": is_enabled}}
                         )
-                    existing_feature["_id"] = str(existing_feature["_id"])  # Convert ObjectId to string
-                    inserted_features.append(existing_feature)  # Include the existing feature
+                    inserted_features.append(feature_serializer(existing_feature))
 
             return {
                 "school": {

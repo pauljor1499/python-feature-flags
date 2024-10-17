@@ -30,8 +30,11 @@ class FeatureFlags:
             if "feature_name" in query and query["feature_name"]:
                 filter_criteria["name"] = query["feature_name"]
 
-            if "enabled" in query and query["enabled"] is not None:
-                filter_criteria["enabled"] = query["enabled"]
+            if "enabled" in query:
+                if isinstance(query["enabled"], str):
+                    filter_criteria["enabled"] = query["enabled"].lower() == "true"
+                else:
+                    filter_criteria["enabled"] = query["enabled"]
 
             features = await self.collection.find(filter_criteria).to_list(100)
 

@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.routes.question_bank.question_bank import router as QuestionBank
 from src.connection import init_db
 from contextlib import asynccontextmanager
+from src.routes.question_bank.question_bank import router as QuestionBank
+from src.routes.feature_flags.feature_flags import router as FeatureFlags
 
 
 @asynccontextmanager
@@ -33,3 +34,4 @@ def read_root():
     return {"message": "Server is up and running."}
 
 app.include_router(QuestionBank, tags=["Questions"], prefix="/questions")
+app.include_router(FeatureFlags, tags=["Feature Flags"], prefix="/feature-flags")

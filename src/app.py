@@ -8,11 +8,8 @@ from src.routes.feature_flags.feature_flags import router as FeatureFlags
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup event
     await init_db()
     yield
-    # Shutdown event (if needed)
-    # Perform any cleanup actions here
 
 app = FastAPI(
     title="Question Bank API",

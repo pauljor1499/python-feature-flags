@@ -1,0 +1,9 @@
+version: "3.9"
+
+services:
+  api-global-questionbank:
+    build: .
+    ports:
+      - "8002:8000" # 8002 local port & 8000 container port
+    env_file:
+      - .env

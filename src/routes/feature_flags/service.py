@@ -48,7 +48,7 @@ class FeatureFlags:
                 feature_data = {
                     "name": feature_name,
                     "enabled": is_enabled,
-                    "school": school_id  # Store the school ID as ObjectId
+                    "school": str(school_id)  # Store the school ID as a string for MongoDB
                 }
 
                 # Check if the feature already exists for this school
@@ -59,7 +59,7 @@ class FeatureFlags:
                 if not existing_feature:
                     # Insert the new feature into the collection
                     insert_result = await self.collection.insert_one(feature_data)
-                    feature_data["_id"] = insert_result.inserted_id  # Keep the ObjectId for the newly inserted feature
+                    feature_data["_id"] = str(insert_result.inserted_id)  # Convert ObjectId to string
                     inserted_features.append(feature_data)  # Add the created feature to the list
                 else:
                     # Update the existing feature if the enabled status has changed
@@ -68,12 +68,12 @@ class FeatureFlags:
                             {"_id": existing_feature["_id"]},
                             {"$set": {"enabled": is_enabled}}
                         )
-                    existing_feature["_id"] = existing_feature["_id"]  # Keep the ObjectId format
+                    existing_feature["_id"] = str(existing_feature["_id"])  # Convert ObjectId to string
                     inserted_features.append(existing_feature)  # Include the existing feature
 
             return {
                 "school": {
-                    "_id": str(school_id),  # Convert ObjectId to string for response
+                    "_id": str(school_id),
                     "all_features": inserted_features
                 }
             }

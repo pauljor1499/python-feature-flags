@@ -80,3 +80,52 @@ class FeatureFlags:
         except Exception as e:
             print(f"\033[31mERROR: {e}\033[0m")
             raise HTTPException(status_code=500, detail="Error while creating school features")
+
+
+    async def update_school_features(self, school_id: str, features: dict) -> dict:
+        updated_features = []
+        missing_features = []
+
+        try:
+            school_id = ObjectId(school_id)
+            
+            # Loop through the features from the payload
+            for feature in features["school"]["features"]:
+                feature_name = feature["name"]
+                is_enabled = feature["enabled"]
+
+                # Check if the feature already exists for this school
+                existing_feature = await self.collection.find_one(
+                    {"name": feature_name, "school": school_id}
+                )
+
+                if existing_feature:
+                    # Update the existing feature if the enabled status has changed
+                    if existing_feature['enabled'] != is_enabled:
+                        await self.collection.update_one(
+                            {"_id": existing_feature["_id"]},
+                            {"$set": {"enabled": is_enabled}}
+                        )
+                    updated_features.append(feature_serializer(existing_feature))
+                else:
+                    missing_features.append(feature_name)
+
+            # If there are missing features, raise an error
+            if missing_features:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Features not found: {', '.join(missing_features)}"
+                )
+
+            return {
+                "school": {
+                    "_id": str(school_id),
+                    "all_features": updated_features
+                }
+            }
+
+        except HTTPException as error:
+            raise error
+        except Exception as e:
+            print(f"\033[31mERROR: {e}\033[0m")
+            raise HTTPException(status_code=500, detail="Error while updating school features")

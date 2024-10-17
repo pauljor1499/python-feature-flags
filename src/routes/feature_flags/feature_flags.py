@@ -11,6 +11,10 @@ async def feature_list(query: Request) -> dict:
     query_dict = dict(query.query_params)
     return await feature_flag.feature_list(query_dict)
 
+@router.post("/create", response_model=dict, status_code=status.HTTP_200_OK)
+async def create_school_features(school_features: dict) -> dict:
+    return await feature_flag.create_school_features(school_features)
+
 # @router.post("/create", response_model=dict)
 # async def create_question(question_data: dict) -> dict:
 #     return await feature_flag.create_question(question_data)

@@ -22,13 +22,26 @@ class FeatureFlags:
 
     async def feature_list(self, query: dict) -> dict:
         try:
-            features = await self.collection.find().to_list(100)
+            filter_criteria = {}
+
+            if "school_id" in query and query["school_id"]:
+                filter_criteria["school"] = ObjectId(query["school_id"])
+
+            if "feature_name" in query and query["feature_name"]:
+                filter_criteria["name"] = query["feature_name"]
+
+            if "enabled" in query and query["enabled"] is not None:
+                filter_criteria["enabled"] = query["enabled"]
+
+            features = await self.collection.find(filter_criteria).to_list(100)
+
             return {"features": [feature_serializer(feature) for feature in features]}
+
         except HTTPException as error:
             raise error
         except Exception as e:
             print(f"\033[31mERROR: {e}\033[0m")
-            raise HTTPException(status_code=500, detail="Error while fetching all features")
+            raise HTTPException(status_code=500, detail="Error while fetching features")
         
     
     async def create_school_features(self, school: dict) -> dict:

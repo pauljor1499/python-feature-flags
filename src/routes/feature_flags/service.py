@@ -4,6 +4,14 @@ from typing import Optional, Type
 from src.connection import DATABASE
 from src.routes.feature_flags.models import FeatureFlag
 
+def feature_serializer(feature: dict) -> dict:
+    return {
+        "_id": str(feature["_id"]),
+        "name": feature["name"],
+        "enabled": feature["enabled"],
+        "school": str(feature["school"]),
+    }
+
 class FeatureFlags:
     def __init__(self):
         if DATABASE is not None:
@@ -13,8 +21,8 @@ class FeatureFlags:
     
     async def feature_list(self, query: dict) -> dict:
         try:
-            flags = await self.collection.find().to_list(100)
-            return {"features": [FeatureFlag(**flag) for flag in flags]}
+            features = await self.collection.find().to_list(100)
+            return {"features": [feature_serializer(feature) for feature in features]}
         except HTTPException as error:
             raise error
         except Exception as e:

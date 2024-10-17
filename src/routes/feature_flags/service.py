@@ -24,13 +24,13 @@ class FeatureFlags:
         try:
             filter_criteria = {}
 
-            if "school_id" in query and query["school_id"]:
+            if "school_id" in query and query["school_id"] is not None:
                 filter_criteria["school"] = ObjectId(query["school_id"])
 
-            if "feature_name" in query and query["feature_name"]:
+            if "feature_name" in query and query["feature_name"] is not None:
                 filter_criteria["name"] = query["feature_name"]
 
-            if "enabled" in query:
+            if "enabled" in query and query["enabled"] is not None:
                 if isinstance(query["enabled"], str):
                     filter_criteria["enabled"] = query["enabled"].lower() == "true"
                 else:

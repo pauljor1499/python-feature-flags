@@ -75,18 +75,11 @@ class FeatureFlags:
         try:
             # Validate and convert payload to CreateFeatureFlag model
             validated_payload = CreateFeatureFlag(**payload)
-            school_id = ObjectId(validated_payload.school_id)  # Using the school_id from the validated payload
+            school_id = ObjectId(validated_payload.school_id)
 
+            # Iterate over the all_features to check for existence and insert/update
             for feature_name in all_features:
-                # Check if the feature is in the validated features list
-                active_feature = next((feature for feature in validated_payload.features if feature.name == feature_name), None)
-                is_enabled = active_feature.enabled if active_feature else False
-
-                feature_data = {
-                    "name": feature_name,
-                    "enabled": is_enabled,
-                    "school": school_id
-                }
+                is_enabled = next((feature.enabled for feature in validated_payload.features if feature.name == feature_name),False)
 
                 # Check if the feature already exists for this school
                 existing_feature = await self.collection.find_one(
@@ -95,8 +88,13 @@ class FeatureFlags:
 
                 if not existing_feature:
                     # Insert the new feature into the collection
+                    feature_data = {
+                        "name": feature_name,
+                        "enabled": is_enabled,
+                        "school": school_id
+                    }
                     insert_result = await self.collection.insert_one(feature_data)
-                    feature_data["_id"] = insert_result.inserted_id  # Keep ObjectId for storage
+                    feature_data["_id"] = insert_result.inserted_id
                     inserted_features.append(feature_serializer(feature_data))
                 else:
                     # Update the existing feature if the enabled status has changed

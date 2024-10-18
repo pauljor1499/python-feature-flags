@@ -69,18 +69,16 @@ class FeatureFlags:
             raise HTTPException(status_code=500, detail="Error while fetching features")
         
     
-    async def create_school_features(self, payload: dict) -> dict:
+    async def create_school_features(self, payload: CreateFeatureFlag) -> dict:
         all_features = ["Dashboard", "Settings", "Classes"]
         inserted_features = []
 
         try:
-            # Validate and convert payload to CreateFeatureFlag model
-            validated_payload = CreateFeatureFlag(**payload)
-            school_id = ObjectId(validated_payload.school_id)  # Using the school_id from the validated payload
+            school_id = ObjectId(payload.school_id)  # Using the school_id from the validated payload
 
             # Iterate over the all_features to check for existence and insert/update
             for feature_name in all_features:
-                is_enabled = next((feature.enabled for feature in validated_payload.features if feature.name == feature_name), False)
+                is_enabled = next((feature.enabled for feature in payload.features if feature.name == feature_name), False)
 
                 # Check if the feature already exists for this school
                 existing_feature = await self.collection.find_one(

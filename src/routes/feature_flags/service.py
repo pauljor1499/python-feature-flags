@@ -68,16 +68,16 @@ class FeatureFlags:
             raise HTTPException(status_code=500, detail="Error while fetching features")
         
     
-    async def create_school_features(self, school: dict) -> dict:
+    async def create_school_features(self, payload: dict) -> dict:
         all_features = ["Dashboard", "Settings", "Classes"]
         inserted_features = []
 
         try:
-            school_id = ObjectId(school["school"]["_id"])
+            school_id = ObjectId(payload["school_id"])
             
             for feature_name in all_features:
                 # Check if the feature is in the active_features list
-                active_feature = next((feature for feature in school["school"]["active_features"] if feature["name"] == feature_name), None)
+                active_feature = next((feature for feature in payload["features"] if feature["name"] == feature_name), None)
                 is_enabled = active_feature["enabled"] if active_feature else False
 
                 feature_data = {
@@ -106,8 +106,7 @@ class FeatureFlags:
                     inserted_features.append(feature_serializer(existing_feature))
 
             return {
-                "school": {
-                    "_id": str(school_id),
+                "data": {
                     "all_features": inserted_features
                 }
             }

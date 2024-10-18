@@ -45,6 +45,27 @@ class FeatureFlags:
         except Exception as e:
             print(f"\033[31mERROR: {e}\033[0m")
             raise HTTPException(status_code=500, detail="Error while fetching features")
+    
+
+    async def fetch_school_features(self, school_id: str, query: dict) -> dict:
+        try:
+            filter_criteria = {"school": ObjectId(school_id)}
+
+            if "enabled" in query and query["enabled"] is not None:
+                if isinstance(query["enabled"], str):
+                    filter_criteria["enabled"] = query["enabled"].lower() == "true"
+                else:
+                    filter_criteria["enabled"] = query["enabled"]
+
+            features = await self.collection.find(filter_criteria).to_list(100)
+
+            return {"features": [feature_serializer(feature) for feature in features]}
+
+        except HTTPException as error:
+            raise error
+        except Exception as e:
+            print(f"\033[31mERROR: {e}\033[0m")
+            raise HTTPException(status_code=500, detail="Error while fetching features")
         
     
     async def create_school_features(self, school: dict) -> dict:

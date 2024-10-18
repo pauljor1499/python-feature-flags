@@ -10,6 +10,7 @@ def feature_serializer(feature: dict) -> dict:
         "name": feature["name"],
         "enabled": feature["enabled"],
         "school": str(feature["school"]),
+        "deleted": feature["deleted"],
     }
 
 class FeatureFlags:
@@ -91,7 +92,8 @@ class FeatureFlags:
                     feature_data = {
                         "name": feature_name,
                         "enabled": is_enabled,
-                        "school": school_id
+                        "school": school_id,
+                        "deleted": False
                     }
                     insert_result = await self.collection.insert_one(feature_data)
                     feature_data["_id"] = insert_result.inserted_id  # Keep ObjectId for storage

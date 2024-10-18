@@ -133,9 +133,10 @@ class FeatureFlags:
 
         try:
             school_id = ObjectId(school_id)
-            
+            feature_list = features["features"]
+
             # Loop through the features from the payload
-            for feature in features["school"]["features"]:
+            for feature in feature_list:
                 feature_name = feature["name"]
                 is_enabled = feature["enabled"]
 
@@ -151,7 +152,14 @@ class FeatureFlags:
                             {"_id": existing_feature["_id"]},
                             {"$set": {"enabled": is_enabled}}
                         )
-                    updated_features.append(feature_serializer(existing_feature))
+                        # Fetch the updated feature to append to the list
+                        updated_feature = await self.collection.find_one(
+                            {"_id": existing_feature["_id"]}
+                        )
+                        updated_features.append(feature_serializer(updated_feature))
+                    else:
+                        # If no change was made, append the existing feature
+                        updated_features.append(feature_serializer(existing_feature))
                 else:
                     missing_features.append(feature_name)
 
@@ -163,9 +171,9 @@ class FeatureFlags:
                 )
 
             return {
-                "school": {
-                    "_id": str(school_id),
-                    "all_features": updated_features
+                "data": {
+                    "school_id": str(school_id),
+                    "updated_features": updated_features
                 }
             }
 

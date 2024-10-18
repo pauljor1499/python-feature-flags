@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from bson import ObjectId
 from typing import Optional, Type
 from src.connection import DATABASE
-from src.routes.feature_flags.models import FeatureFlag
+from src.routes.feature_flags.models import CreateFeatureFlag
 
 def feature_serializer(feature: dict) -> dict:
     return {
@@ -73,12 +73,14 @@ class FeatureFlags:
         inserted_features = []
 
         try:
-            school_id = ObjectId(payload["school_id"])
-            
+            # Validate and convert payload to CreateFeatureFlag model
+            validated_payload = CreateFeatureFlag(**payload)
+            school_id = ObjectId(validated_payload.school_id)  # Using the school_id from the validated payload
+
             for feature_name in all_features:
-                # Check if the feature is in the active_features list
-                active_feature = next((feature for feature in payload["features"] if feature["name"] == feature_name), None)
-                is_enabled = active_feature["enabled"] if active_feature else False
+                # Check if the feature is in the validated features list
+                active_feature = next((feature for feature in validated_payload.features if feature.name == feature_name), None)
+                is_enabled = active_feature.enabled if active_feature else False
 
                 feature_data = {
                     "name": feature_name,
@@ -107,7 +109,7 @@ class FeatureFlags:
 
             return {
                 "data": {
-                    "all_features": inserted_features
+                    "features_added": inserted_features
                 }
             }
 

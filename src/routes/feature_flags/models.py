@@ -6,7 +6,7 @@ class FeatureFlag(BaseModel):
     name: str
     enabled: bool
     deleted: Optional[bool] = None
-    school: str
+    school: Optional[str] = None
 
 
 class CreateFeatureFlag(BaseModel):

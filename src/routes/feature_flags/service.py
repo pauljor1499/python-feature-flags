@@ -25,7 +25,7 @@ class FeatureFlags:
 
     async def fetch_all_school_features(self, query: dict) -> dict:
         try:
-            filter_criteria = {}
+            filter_criteria = {"deleted": False}
 
             if "school_id" in query and query["school_id"] is not None:
                 filter_criteria["school"] = ObjectId(query["school_id"])
@@ -52,7 +52,7 @@ class FeatureFlags:
 
     async def fetch_school_features(self, school_id: str, query: dict) -> dict:
         try:
-            filter_criteria = {"school": ObjectId(school_id)}
+            filter_criteria = {"school": ObjectId(school_id), "deleted": False}
 
             if "enabled" in query and query["enabled"] is not None:
                 if isinstance(query["enabled"], str):
@@ -78,7 +78,7 @@ class FeatureFlags:
         try:
             # Validate and convert payload to CreateFeatureFlag model
             validated_payload = CreateFeatureFlag(**payload)
-            school_id = ObjectId(validated_payload.school_id)  # Convert school_id to ObjectId
+            school_id = ObjectId(validated_payload.school_id)
 
             # Iterate over the all_features to check for existence and insert/update
             for feature_name in all_features:
@@ -93,11 +93,10 @@ class FeatureFlags:
                 )
 
                 if not existing_feature:
-                    # Insert the new feature into the collection
                     data = {
                         "name": feature_name,
                         "enabled": is_enabled,
-                        "school": school_id,  # Ensure school_id is included
+                        "school": school_id,
                         "deleted": False,
                         "createdDate": datetime.utcnow(),
                     }
@@ -105,13 +104,13 @@ class FeatureFlags:
                     feature_data_dict = feature_data.dict()
                     insert_result = await self.collection.insert_one(feature_data_dict)  # Use .dict() for insertion
                     feature_data_dict["_id"] = insert_result.inserted_id  # Keep ObjectId for storage
-                    inserted_features.append(feature_serializer(feature_data_dict))  # Append new feature
+                    inserted_features.append(feature_serializer(feature_data_dict))
                 else:
                     # Update the existing feature if the enabled status has changed
                     if existing_feature['enabled'] != is_enabled:
                         update_data = {
                             "enabled": is_enabled,
-                            "updatedDate": datetime.utcnow(),  # Update date on modification
+                            "updatedDate": datetime.utcnow(),
                         }
                         await self.collection.update_one(
                             {"_id": existing_feature["_id"]},

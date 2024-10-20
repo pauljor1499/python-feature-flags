@@ -101,7 +101,7 @@ class FeatureFlags:
                         "enabled": is_enabled,
                         "school": school_id,
                         "deleted": False,
-                        "createdDate": datetime.utcnow(),
+                        "createdDate": datetime.now(timezone.utc),
                     }
                     feature_data = FeatureFlag(**data)
                     feature_data_dict = feature_data.dict()
@@ -113,7 +113,7 @@ class FeatureFlags:
                     if existing_feature['enabled'] != is_enabled:
                         update_data = {
                             "enabled": is_enabled,
-                            "updatedDate": datetime.utcnow(),
+                            "updatedDate": datetime.now(timezone.utc),
                         }
                         await self.collection.update_one(
                             {"_id": existing_feature["_id"]},
@@ -164,7 +164,7 @@ class FeatureFlags:
                     if existing_feature['enabled'] != is_enabled:
                         await self.collection.update_one(
                             {"_id": existing_feature["_id"]},
-                            {"$set": {"enabled": is_enabled}}
+                            {"$set": {"enabled": is_enabled, "updatedDate": datetime.now(timezone.utc)}}
                         )
                         # Fetch the updated feature to append to the list
                         updated_feature = await self.collection.find_one(

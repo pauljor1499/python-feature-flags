@@ -38,14 +38,14 @@ class CorrectAnswer(BaseModel):
     answerDetails: str = Field(None, min_length=1, max_length=300)
 
 class QuestionBase(BaseModel):
-    # Required fields
+    # Required fields from request payload
     question: str = Field(..., min_length=1, max_length=300)
     correctAnswer: CorrectAnswer
     assignmentType: AssignmentType
     difficulty: DifficultyType
     points: str = Field(..., min_length=1, max_length=3)
     questionType: QuestionType
-    createdDate: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    createdDate: Optional[datetime] = None
     deleted: bool = False
     # Optional fields
     updatedDate: Optional[datetime] = None

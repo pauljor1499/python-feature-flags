@@ -23,6 +23,7 @@ class QuestionBankService:
             QuestionModel: Type = question_type_map[questionType]
             question = QuestionModel(**question_data)
             question_dict = question.dict()
+            question_dict["createdDate"] = datetime.utcnow()
             result = await self.collection.insert_one(question_dict)
             new_question = await self.fetch_question(str(result.inserted_id))
             return {"new_question": new_question}

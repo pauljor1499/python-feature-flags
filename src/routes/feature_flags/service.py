@@ -192,6 +192,7 @@ class FeatureFlags:
         
         # Fetch the features associated with the school_id
         school_features = await self.fetch_school_features(school_id, {})
+        
         if school_features is None:
             raise HTTPException(status_code=404, detail="School features not found")
         
@@ -205,7 +206,9 @@ class FeatureFlags:
             if result.modified_count == 0:
                 raise HTTPException(status_code=404, detail="No matching features found for the school")
             
-            return {"deleted": True, "data": school_features}
+            updated_features = await self.fetch_school_features(school_id, {})
+            
+            return {"deleted": True, "data": updated_features}
         
         except Exception as e:
             print(f"\033[31mERROR: {e}\033[0m")

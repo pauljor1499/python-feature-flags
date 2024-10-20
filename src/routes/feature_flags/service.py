@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from bson import ObjectId
 from src.connection import DATABASE
 from datetime import datetime, timezone
-from src.routes.feature_flags.models import CreateFeatureFlag
+from src.routes.feature_flags.models import CreateFeatureFlag, FeatureFlag
 from typing import Optional
 
 
@@ -78,11 +78,14 @@ class FeatureFlags:
         try:
             # Validate and convert payload to CreateFeatureFlag model
             validated_payload = CreateFeatureFlag(**payload)
-            school_id = ObjectId(validated_payload.school_id)  # Using the school_id from the validated payload
+            school_id = ObjectId(validated_payload.school_id)  # Convert school_id to ObjectId
 
             # Iterate over the all_features to check for existence and insert/update
             for feature_name in all_features:
-                is_enabled = next((feature.enabled for feature in validated_payload.features if feature.name == feature_name), False)
+                is_enabled = next(
+                    (feature.enabled for feature in validated_payload.features if feature.name == feature_name),
+                    False
+                )
 
                 # Check if the feature already exists for this school
                 existing_feature = await self.collection.find_one(
@@ -91,21 +94,28 @@ class FeatureFlags:
 
                 if not existing_feature:
                     # Insert the new feature into the collection
-                    feature_data = {
+                    data = {
                         "name": feature_name,
                         "enabled": is_enabled,
-                        "school": school_id,
-                        "deleted": False
+                        "school": school_id,  # Ensure school_id is included
+                        "deleted": False,
+                        "createdDate": datetime.utcnow(),
                     }
-                    insert_result = await self.collection.insert_one(feature_data)
-                    feature_data["_id"] = insert_result.inserted_id  # Keep ObjectId for storage
-                    inserted_features.append(feature_serializer(feature_data))  # Append new feature
+                    feature_data = FeatureFlag(**data)
+                    feature_data_dict = feature_data.dict()
+                    insert_result = await self.collection.insert_one(feature_data_dict)  # Use .dict() for insertion
+                    feature_data_dict["_id"] = insert_result.inserted_id  # Keep ObjectId for storage
+                    inserted_features.append(feature_serializer(feature_data_dict))  # Append new feature
                 else:
                     # Update the existing feature if the enabled status has changed
                     if existing_feature['enabled'] != is_enabled:
+                        update_data = {
+                            "enabled": is_enabled,
+                            "updatedDate": datetime.utcnow(),  # Update date on modification
+                        }
                         await self.collection.update_one(
                             {"_id": existing_feature["_id"]},
-                            {"$set": {"enabled": is_enabled}}
+                            {"$set": update_data}
                         )
                         # After updating, we fetch the updated feature to append to the list
                         updated_feature = await self.collection.find_one(
@@ -126,7 +136,7 @@ class FeatureFlags:
             raise error
         except Exception as e:
             print(f"\033[31mERROR: {e}\033[0m")
-            raise HTTPException(status_code=500, detail="Error while creating school features")
+            raise HTTPException(status_code=500, detail=f"Error while creating school features: {str(e)}")
 
 
     async def update_school_features(self, school_id: str, features: dict) -> dict:

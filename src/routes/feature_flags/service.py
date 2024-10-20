@@ -3,6 +3,8 @@ from bson import ObjectId
 from src.connection import DATABASE
 from datetime import datetime, timezone
 from src.routes.feature_flags.models import CreateFeatureFlag
+from typing import Optional
+
 
 def feature_serializer(feature: dict) -> dict:
     return {
@@ -186,18 +188,25 @@ class FeatureFlags:
 
     async def delete_school_features(self, school_id: str) -> dict:
         if not ObjectId.is_valid(school_id):
-            raise HTTPException(status_code=400, detail="Invalid question ID format")
-        question = await self.fetch_school_features(school_id)
-        if question is None:
-            raise HTTPException(status_code=404, detail="Question not found")
+            raise HTTPException(status_code=400, detail="Invalid school ID format")
+        
+        # Fetch the features associated with the school_id
+        school_features = await self.fetch_school_features(school_id, {})
+        if school_features is None:
+            raise HTTPException(status_code=404, detail="School features not found")
+        
         try:
-            result = await self.collection.update_one(
-                {"_id": ObjectId(school_id)},
+            # Update all documents matching the school_id
+            result = await self.collection.update_many(
+                {"school": ObjectId(school_id)},
                 {"$set": {"deleted": True, "deletedDate": datetime.now(timezone.utc)}}
             )
+            
             if result.modified_count == 0:
-                raise HTTPException(status_code=404, detail="Question not found")
-            return {"deleted": True, "data": question}
+                raise HTTPException(status_code=404, detail="No matching features found for the school")
+            
+            return {"deleted": True, "data": school_features}
+        
         except Exception as e:
             print(f"\033[31mERROR: {e}\033[0m")
-            raise HTTPException(status_code=500, detail="Error while deleting the question")
+            raise HTTPException(status_code=500, detail="Error while deleting school features")

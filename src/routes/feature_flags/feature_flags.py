@@ -1,4 +1,4 @@
-from fastapi import Request, APIRouter, Body, status
+from fastapi import Request, APIRouter, Query, status
 from src.routes.feature_flags.service import FeatureFlags
 
 

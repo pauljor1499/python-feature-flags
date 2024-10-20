@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from bson import ObjectId
-from typing import Optional, Type
 from src.connection import DATABASE
+from datetime import datetime, timezone
 from src.routes.feature_flags.models import CreateFeatureFlag
 
 def feature_serializer(feature: dict) -> dict:
@@ -21,7 +21,7 @@ class FeatureFlags:
             print(f"\033[31mERROR: Unable to connect to the database.\033[0m")
     
 
-    async def feature_list(self, query: dict) -> dict:
+    async def fetch_all_school_features(self, query: dict) -> dict:
         try:
             filter_criteria = {}
 
@@ -182,3 +182,22 @@ class FeatureFlags:
         except Exception as e:
             print(f"\033[31mERROR: {e}\033[0m")
             raise HTTPException(status_code=500, detail="Error while updating school features")
+    
+
+    async def delete_school_features(self, school_id: str) -> dict:
+        if not ObjectId.is_valid(school_id):
+            raise HTTPException(status_code=400, detail="Invalid question ID format")
+        question = await self.fetch_school_features(school_id)
+        if question is None:
+            raise HTTPException(status_code=404, detail="Question not found")
+        try:
+            result = await self.collection.update_one(
+                {"_id": ObjectId(school_id)},
+                {"$set": {"deleted": True, "deletedDate": datetime.now(timezone.utc)}}
+            )
+            if result.modified_count == 0:
+                raise HTTPException(status_code=404, detail="Question not found")
+            return {"deleted": True, "data": question}
+        except Exception as e:
+            print(f"\033[31mERROR: {e}\033[0m")
+            raise HTTPException(status_code=500, detail="Error while deleting the question")

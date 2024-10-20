@@ -1,4 +1,4 @@
-from fastapi import Request, APIRouter, Query, status
+from fastapi import Request, APIRouter, status
 from src.routes.feature_flags.service import FeatureFlags
 
 
@@ -11,7 +11,7 @@ async def fetch_all_school_features(query: Request) -> dict:
     query_dict = dict(query.query_params)
     return await feature_flag.fetch_all_school_features(query_dict)
 
-@router.get("/{school_id}", response_model=dict)
+@router.get("/{school_id}", response_model=dict, status_code=status.HTTP_200_OK)
 async def fetch_school_features(school_id: str, query: Request) -> dict:
     query_dict = dict(query.query_params)
     return await feature_flag.fetch_school_features(school_id, query_dict)
@@ -24,18 +24,6 @@ async def create_school_features(school_features: dict) -> dict:
 async def update_school_features(school_id: str, updated_data: dict) -> dict:
     return await feature_flag.update_school_features(school_id, updated_data)
 
-@router.delete("/delete/{school_id}", response_model=dict)
+@router.delete("/delete/{school_id}", response_model=dict, status_code=status.HTTP_200_OK)
 async def delete_question(school_id: str) -> dict:
     return await feature_flag.delete_school_features(school_id)
-
-# @router.post("/create", response_model=dict)
-# async def create_question(question_data: dict) -> dict:
-#     return await feature_flag.create_question(question_data)
-
-# @router.get("/{question_id}", response_model=dict)
-# async def fetch_question(question_id: str) -> dict:
-#     return await feature_flag.fetch_question(question_id)
-
-# @router.delete("/delete/{question_id}", response_model=dict)
-# async def delete_question(question_id: str) -> dict:
-#     return await feature_flag.delete_question(question_id)

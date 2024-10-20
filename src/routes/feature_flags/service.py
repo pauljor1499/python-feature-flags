@@ -13,6 +13,9 @@ def feature_serializer(feature: dict) -> dict:
         "enabled": feature["enabled"],
         "school": str(feature["school"]),
         "deleted": feature["deleted"],
+        "deletedDate": feature["deletedDate"],
+        "createdDate": feature["createdDate"],
+        "updatedDate": feature["updatedDate"],
     }
 
 class FeatureFlags:
